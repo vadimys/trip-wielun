@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Поїздка до Велюня / Reise nach Wieluń</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --paper:#F5F7FA;
+  --panel:#FFFFFF;
+  --ink:#16202D;
+  --muted:#566275;
+  --line:#D9DFE7;
+  --action:#1559C7;
+  --on-action:#FFFFFF;
+  --action-text:#1559C7;
+  --asphalt:#3B4452;
+  --route:#F2B705;
+  --on-route:#1B1B1B;
+  --sos:#C62828;
+  --font:"Fira Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top, 0px);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#121821;
+    --panel:#1B2330;
+    --ink:#EDF1F6;
+    --muted:#A3AEBE;
+    --line:#2E3949;
+    --action:#2F6FE0;
+    --on-action:#FFFFFF;
+    --action-text:#8DB4FF;
+    --asphalt:#4A5568;
+    --route:#F2B705;
+    --on-route:#1B1B1B;
+    --sos:#D84343;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#121821;
+  --panel:#1B2330;
+  --ink:#EDF1F6;
+  --muted:#A3AEBE;
+  --line:#2E3949;
+  --action:#2F6FE0;
+  --on-action:#FFFFFF;
+  --action-text:#8DB4FF;
+  --asphalt:#4A5568;
+  --route:#F2B705;
+  --on-route:#1B1B1B;
+  --sos:#D84343;
+}
+*,*::before,*::after{ box-sizing:inherit; }
+html{ scroll-padding-top:env(safe-area-inset-top, 0px); -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:1.1875rem;
+  line-height:1.5;
+}
+main{ max-width:600px; margin:0 auto; padding:20px 20px 56px; }
+
+/* Language switch */
+.lang-switch{
+  display:flex; gap:4px; width:max-content;
+  border:2px solid var(--line); border-radius:999px; padding:4px;
+  background:var(--panel);
+}
+.lang-switch button{
+  font:600 1.0625rem/1 var(--font);
+  min-height:48px; padding:0 20px;
+  border:0; border-radius:999px;
+  background:transparent; color:var(--ink); cursor:pointer;
+}
+.lang-switch button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+
+/* Header */
+h1{
+  font-size:clamp(1.9rem, 7.5vw, 2.6rem);
+  font-weight:800; line-height:1.12; letter-spacing:-0.01em;
+  margin:28px 0 6px;
+}
+.date{ font-size:1.3125rem; font-weight:600; color:var(--muted); margin:0 0 18px; }
+.howto{ margin:0 0 10px; }
+.weather{ color:var(--muted); margin:0 0 32px; }
+
+/* Panels */
+.panel{
+  background:var(--panel);
+  border:2px solid var(--line);
+  border-radius:18px;
+  padding:20px 20px 10px;
+  margin:0 0 40px;
+}
+.panel.rules{ border-color:var(--route); }
+.panel h2{ font-size:1.375rem; font-weight:800; line-height:1.25; margin:0 0 14px; }
+.panel ol, .panel ul{ margin:0; padding-left:1.4em; }
+.panel li{ margin:0 0 14px; }
+.panel li .btns{ margin-top:10px; }
+
+/* Route */
+.route-head h2{ font-size:1.625rem; font-weight:800; margin:0 0 6px; }
+.late{ color:var(--muted); margin:0 0 28px; }
+.route{ list-style:none; margin:0 0 44px; padding:0 0 0 60px; }
+.stop{ position:relative; padding-bottom:44px; }
+.stop:last-child{ padding-bottom:0; }
+.stop::before{
+  content:""; position:absolute;
+  left:-40px; top:20px; bottom:-20px; width:14px;
+  background:var(--asphalt);
+}
+.stop::after{
+  content:""; position:absolute;
+  left:-34px; top:34px; bottom:-8px; width:2px;
+  background:repeating-linear-gradient(to bottom, var(--route) 0 12px, transparent 12px 24px);
+}
+.stop:last-child::before, .stop:last-child::after{ display:none; }
+.marker{
+  position:absolute; left:-52px; top:-2px; z-index:1;
+  width:38px; height:38px; border-radius:50%;
+  background:var(--route); color:var(--on-route);
+  font-weight:800; font-size:1.125rem;
+  display:grid; place-items:center;
+  box-shadow:0 0 0 4px var(--paper);
+}
+.time{ font-size:1.5rem; font-weight:800; line-height:1.2; margin:2px 0 2px; font-variant-numeric:tabular-nums; }
+.stop h3{ font-size:1.3125rem; font-weight:600; line-height:1.3; margin:0 0 10px; }
+.stop ul, .stop ol{ margin:0; padding-left:1.2em; }
+.stop li{ margin:0 0 8px; }
+.note{ font-weight:600; margin:12px 0 0; }
+
+/* Buttons */
+.btns{ display:grid; gap:12px; margin-top:16px; }
+.btn{
+  display:flex; align-items:center; gap:14px;
+  width:100%; min-height:62px; padding:14px 18px;
+  border-radius:14px; border:2px solid var(--action);
+  font:600 1.15rem/1.3 var(--font);
+  text-decoration:none;
+}
+.btn svg{ flex:0 0 auto; width:28px; height:28px; }
+.btn.go{ background:var(--action); color:var(--on-action); }
+.btn.alt{ background:transparent; color:var(--action-text); }
+.btn.call{ background:var(--sos); border-color:var(--sos); color:#FFFFFF; }
+.btn.call-son{ background:#1E7D3A; border-color:#1E7D3A; color:#FFFFFF; }
+.top-call{ margin:6px 0 16px; }
+.btn:active{ transform:translateY(1px); }
+a:focus-visible, button:focus-visible{ outline:3px solid var(--route); outline-offset:3px; }
+
+.sos p{ color:var(--muted); margin:10px 0 0; }
+
+@media (prefers-reduced-motion: reduce){
+  .btn:active{ transform:none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="lang-switch" role="group" aria-label="Мова / Sprache">
+    <button type="button" data-lang="uk" aria-pressed="true">Українська</button>
+    <button type="button" data-lang="de" aria-pressed="false">Deutsch</button>
+  </div>
+
+  <header>
+    <h1 id="title"></h1>
+    <p class="date" id="date"></p>
+    <p class="howto" id="howto"></p>
+    <div class="btns top-call" id="topCall"></div>
+    <p class="weather" id="weather"></p>
+  </header>
+
+  <section class="panel" aria-labelledby="prepTitle">
+    <h2 id="prepTitle"></h2>
+    <ol id="prep"></ol>
+  </section>
+
+  <section aria-labelledby="routeTitle">
+    <div class="route-head"><h2 id="routeTitle"></h2></div>
+    <p class="late" id="late"></p>
+    <ol class="route" id="route"></ol>
+  </section>
+
+  <section class="panel rules" aria-labelledby="rulesTitle">
+    <h2 id="rulesTitle"></h2>
+    <ul id="rules"></ul>
+  </section>
+
+  <section class="sos">
+    <div class="btns" id="sosBtn"></div>
+    <p id="sosHint"></p>
+  </section>
+</main>
+
+<script>
+const NAV_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Parking%20Wratislavia%20Center%2C%20Rze%C5%BAnicza%2C%20Wroc%C5%82aw&destination_place_id=ChIJV2YHOHXCD0cRhSdgSz6TCog&travelmode=driving&dir_action=navigate";
+const NAV_HOTEL = "https://www.google.com/maps/dir/?api=1&destination=Hotel%20Pod%20Ratuszem%2C%20Kr%C3%B3lewska%209%2C%20Wielu%C5%84&destination_place_id=ChIJm0XH22B_GkcR89u8-PAPhd0&travelmode=driving&dir_action=navigate";
+const WALK_RYNEK = "https://www.google.com/maps/dir/?api=1&destination=Stary%20Ratusz%2C%20Rynek%2C%20Wroc%C5%82aw&destination_place_id=ChIJ8apiJ_fDD0cRQE-CbjJj_Uo&travelmode=walking";
+const WALK_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Parking%20Wratislavia%20Center%2C%20Rze%C5%BAnicza%2C%20Wroc%C5%82aw&destination_place_id=ChIJV2YHOHXCD0cRhSdgSz6TCog&travelmode=walking";
+const SHOW_RESTAURANT = "https://www.google.com/maps/search/?api=1&query=Czarnomorka%20Wroc%C5%82aw&query_place_id=ChIJZVnvtqfDD0cRtCuuNryg65A";
+const APP_IOS = "https://apps.apple.com/app/google-maps/id585027354";
+const APP_ANDROID = "https://play.google.com/store/apps/details?id=com.google.android.apps.maps";
+const CALL_SON = "tel:+48881445735";
+
+const ICON_PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
+const ICON_APP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>';
+const ICON_PHONE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>';
+
+const T = {
+  uk: {
+    pageTitle: "Поїздка до Велюня, 23 жовтня",
+    title: "Берлін → Вроцлав → Велюнь",
+    date: "П’ятниця, 23 жовтня",
+    howto: "Натискайте <strong>сині кнопки</strong> — відкриється Google Maps і поведе вас голосом. Щоб повернутися до цього плану, просто знову відкрийте браузер або повідомлення з посиланням.",
+    weather: "За прогнозом у п’ятницю сухо: вдень до +15 °C, увечері близько +5 °C.",
+    prepTitle: "Напередодні, у четвер",
+    prep: [
+      { t: "Встановіть на телефон програму Google Maps, якщо її ще немає.",
+        b: [[APP_IOS, "Google Maps для iPhone", "alt", ICON_APP], [APP_ANDROID, "Google Maps для Android", "alt", ICON_APP]] },
+      { t: "Увімкніть на телефоні геолокацію (місцезнаходження)." },
+      { t: "Перевірка: натисніть синю кнопку в кроці 1. Має відкритися Google Maps з маршрутом до Вроцлава. Нікуди не їдьте — просто закрийте." },
+      { t: "Зарядіть телефон. Візьміть у машину зарядку й тримач для телефона." },
+      { t: "Візьміть паспорт, водійські права, документи на машину, банківську картку, зручне взуття й теплу куртку на вечір." }
+    ],
+    routeTitle: "Ваш день",
+    late: "Якщо запізнюєтеся — нічого страшного, просто погуляйте трохи менше. Головне — виїхати з паркінгу до 14:30.",
+    steps: [
+      { time: "07:30", title: "Виїзд з Берліна",
+        items: [
+          "Натисніть кнопку, коли вже сидите в машині. Якщо навігація не почалася сама, натисніть унизу «Старт» (Start).",
+          "Дорога близько 343 км, приблизно 3 год 45 хв без зупинок. Платних доріг немає.",
+          "Маршрут іде через кордон біля Forst: A15 → A18 → A4.",
+          "Десь на півдорозі зупиніться на 20–30 хвилин: кава, туалет.",
+          "Напишіть нам, що виїхали."
+        ],
+        buttons: [[NAV_PARKING, "Маршрут до паркінгу у Вроцлаві", "go", ICON_PIN]] },
+      { time: "≈ 11:45", title: "Паркінг у Вроцлаві",
+        items: [
+          "Google Maps привезе вас до в’їзду в підземний паркінг.",
+          "Камера сама зчитає номер машини, і шлагбаум відкриється. Талон брати не треба.",
+          "Усередині їдьте повільно й шукайте вільне місце.",
+          "Поставили машину? Сфотографуйте табличку з номером поверху чи сектора — так потім легко її знайдете.",
+          "Сфотографуйте номер машини: його треба буде ввести в автоматі для оплати.",
+          "Напишіть нам, що доїхали."
+        ] },
+      { time: "12:00", title: "Обід у ресторані Czarnomorka",
+        items: [
+          "Ресторан у цій самій будівлі, прямо над паркінгом. Просто підніміться нагору.",
+          "Відкривається о 12:00. Тут готують рибу й морепродукти."
+        ],
+        buttons: [[SHOW_RESTAURANT, "Показати ресторан на карті", "alt", ICON_PIN]] },
+      { time: "13:00", title: "Прогулянка по Ринку",
+        items: [
+          "До головної площі (Ринку) близько 5 хвилин пішки. Перша кнопка покаже дорогу.",
+          "Подивіться на стару Ратушу й кольорові будинки довкола. По місту стоять маленькі бронзові гномики — їх весело шукати.",
+          "Під ногами бруківка, тому важливе зручне взуття.",
+          "О 14:15 повертайтеся до паркінгу. Друга кнопка покаже дорогу назад."
+        ],
+        buttons: [[WALK_RYNEK, "Пішки до Ринку", "go", ICON_PIN], [WALK_PARKING, "Пішки назад до паркінгу", "alt", ICON_PIN]] },
+      { time: "14:15", title: "Оплата паркінгу", ordered: true,
+        items: [
+          "Знайдіть у паркінгу автомат для оплати (паркомат).",
+          "Введіть номер машини (він у вас на фото).",
+          "Автомат покаже суму. Оплатіть карткою.",
+          "Одразу йдіть до машини."
+        ],
+        note: "Якщо щось не виходить — подзвоніть нам.",
+        buttons: [[CALL_SON, "Подзвонити Вадиму", "call-son", ICON_PHONE]] },
+      { time: "14:30", title: "Їдемо до Велюня",
+        items: [
+          "Сядьте в машину й ще до того, як рушити, натисніть синю кнопку. Дочекайтеся, поки з’явиться маршрут.",
+          "На виїзді шлагбаум має відкритися сам.",
+          "Дорога близько 130 км, приблизно півтори години.",
+          "Напишіть нам, що виїхали."
+        ],
+        buttons: [[NAV_HOTEL, "Маршрут до готелю у Велюні", "go", ICON_PIN]] },
+      { time: "≈ 16:00", title: "Готель Pod Ratuszem, Велюнь",
+        items: [
+          "Адреса: вул. Królewska 9, Wieluń.",
+          "Біля готелю є власна безкоштовна стоянка.",
+          "Ми вже чекаємо на вас!"
+        ] }
+    ],
+    rulesTitle: "Для водія: що в Польщі інакше",
+    rules: [
+      "Світло фар увімкнене завжди, навіть удень.",
+      "У містах і селах — не більше 50 км/год, і вдень, і вночі.",
+      "Пішохода пропускайте вже тоді, коли він тільки ступає на перехід.",
+      "Автомагістраль — до 140, швидкісна дорога — до 120, поза містом — до 90 км/год.",
+      "На автомагістралі дистанція — щонайменше половина швидкості в метрах: при 120 км/год це 60 м.",
+      "Алкоголь — практично нуль (межа 0,2 ‰).",
+      "У Вроцлаві немає екологічної зони, наклейка не потрібна."
+    ],
+    callSon: "Подзвонити Вадиму",
+    sos: "Екстрена допомога: 112",
+    sosHint: "Один номер для поліції, швидкої та пожежної."
+  },
+  de: {
+    pageTitle: "Reise nach Wieluń, 23. Oktober",
+    title: "Berlin → Wrocław → Wieluń",
+    date: "Freitag, 23. Oktober",
+    howto: "Tippen Sie auf die <strong>blauen Knöpfe</strong> – Google Maps öffnet sich und führt Sie mit Sprachansage. Zurück zu diesem Plan kommen Sie, indem Sie einfach wieder den Browser oder die Nachricht mit dem Link öffnen.",
+    weather: "Laut Vorhersage ist es am Freitag trocken: tagsüber bis +15 °C, abends um +5 °C.",
+    prepTitle: "Am Vortag, Donnerstag",
+    prep: [
+      { t: "Installieren Sie die App Google Maps auf dem Handy, falls noch nicht vorhanden.",
+        b: [[APP_IOS, "Google Maps für iPhone", "alt", ICON_APP], [APP_ANDROID, "Google Maps für Android", "alt", ICON_APP]] },
+      { t: "Schalten Sie am Handy den Standort (GPS) ein." },
+      { t: "Test: Tippen Sie auf den blauen Knopf bei Schritt 1. Google Maps sollte die Route nach Wrocław zeigen. Nicht losfahren – einfach wieder schließen." },
+      { t: "Laden Sie das Handy auf. Nehmen Sie Ladekabel und Handyhalterung fürs Auto mit." },
+      { t: "Mitnehmen: Personalausweis oder Reisepass, Führerschein, Fahrzeugschein, Bankkarte, bequeme Schuhe und eine warme Jacke für den Abend." }
+    ],
+    routeTitle: "Ihr Tag",
+    late: "Wenn Sie später dran sind – kein Problem, einfach kürzer spazieren gehen. Wichtig ist nur, das Parkhaus bis 14:30 zu verlassen.",
+    steps: [
+      { time: "07:30", title: "Abfahrt in Berlin",
+        items: [
+          "Tippen Sie auf den Knopf, wenn Sie schon im Auto sitzen. Startet die Navigation nicht von selbst, tippen Sie unten auf „Start“.",
+          "Die Strecke ist etwa 343 km lang, rund 3 Std. 45 Min. ohne Pausen. Keine Maut.",
+          "Die Route führt über den Grenzübergang bei Forst: A15 → A18 → A4.",
+          "Etwa auf halber Strecke 20–30 Minuten Pause machen: Kaffee, Toilette.",
+          "Schreiben Sie uns kurz, dass Sie losgefahren sind."
+        ],
+        buttons: [[NAV_PARKING, "Route zum Parkhaus in Wrocław", "go", ICON_PIN]] },
+      { time: "≈ 11:45", title: "Parkhaus in Wrocław (Breslau)",
+        items: [
+          "Google Maps bringt Sie zur Einfahrt der Tiefgarage.",
+          "Eine Kamera liest das Kennzeichen, die Schranke öffnet sich von selbst. Kein Ticket nötig.",
+          "Drinnen langsam fahren und einen freien Platz suchen.",
+          "Geparkt? Fotografieren Sie das Schild mit Etage oder Bereich neben dem Auto – so finden Sie es leicht wieder.",
+          "Fotografieren Sie auch das Kennzeichen: Sie müssen es am Kassenautomaten eingeben.",
+          "Schreiben Sie uns kurz, dass Sie angekommen sind."
+        ] },
+      { time: "12:00", title: "Mittagessen im Restaurant Czarnomorka",
+        items: [
+          "Das Restaurant ist im selben Gebäude, direkt über dem Parkhaus. Einfach nach oben gehen.",
+          "Es öffnet um 12:00 Uhr. Es gibt Fisch und Meeresfrüchte."
+        ],
+        buttons: [[SHOW_RESTAURANT, "Restaurant auf der Karte zeigen", "alt", ICON_PIN]] },
+      { time: "13:00", title: "Spaziergang über den Marktplatz (Rynek)",
+        items: [
+          "Zum Marktplatz sind es etwa 5 Minuten zu Fuß. Der erste Knopf zeigt den Weg.",
+          "Sehenswert: das alte Rathaus und die bunten Bürgerhäuser ringsum. Überall in der Stadt stehen kleine Bronzezwerge – es macht Spaß, sie zu suchen.",
+          "Es gibt Kopfsteinpflaster, also bequeme Schuhe tragen.",
+          "Um 14:15 zurück zum Parkhaus. Der zweite Knopf zeigt den Weg zurück."
+        ],
+        buttons: [[WALK_RYNEK, "Zu Fuß zum Marktplatz", "go", ICON_PIN], [WALK_PARKING, "Zu Fuß zurück zum Parkhaus", "alt", ICON_PIN]] },
+      { time: "14:15", title: "Parken bezahlen", ordered: true,
+        items: [
+          "Suchen Sie im Parkhaus den Kassenautomaten.",
+          "Geben Sie das Kennzeichen ein (Sie haben es als Foto).",
+          "Der Automat zeigt den Betrag. Mit Karte bezahlen.",
+          "Danach direkt zum Auto gehen."
+        ],
+        note: "Wenn etwas nicht klappt, rufen Sie uns an.",
+        buttons: [[CALL_SON, "Vadym anrufen", "call-son", ICON_PHONE]] },
+      { time: "14:30", title: "Weiter nach Wieluń",
+        items: [
+          "Setzen Sie sich ins Auto und tippen Sie noch vor dem Losfahren auf den blauen Knopf. Warten Sie, bis die Route erscheint.",
+          "Die Schranke an der Ausfahrt sollte sich von selbst öffnen.",
+          "Die Strecke ist etwa 130 km lang, rund anderthalb Stunden.",
+          "Schreiben Sie uns kurz, dass Sie losgefahren sind."
+        ],
+        buttons: [[NAV_HOTEL, "Route zum Hotel in Wieluń", "go", ICON_PIN]] },
+      { time: "≈ 16:00", title: "Hotel Pod Ratuszem, Wieluń",
+        items: [
+          "Adresse: ul. Królewska 9, Wieluń.",
+          "Das Hotel hat einen eigenen kostenlosen Parkplatz.",
+          "Wir freuen uns auf Sie!"
+        ] }
+    ],
+    rulesTitle: "Für den Fahrer: Das ist in Polen anders",
+    rules: [
+      "Licht immer einschalten, auch tagsüber.",
+      "In Ortschaften höchstens 50 km/h – tagsüber und nachts.",
+      "Fußgänger schon vorlassen, wenn sie den Zebrastreifen gerade betreten.",
+      "Autobahn bis 140, Schnellstraße bis 120, außerorts bis 90 km/h.",
+      "Abstand auf Autobahn und Schnellstraße: mindestens halber Tacho in Metern, bei 120 km/h also 60 m.",
+      "Alkohol: praktisch null (Grenze 0,2 Promille).",
+      "In Wrocław gibt es keine Umweltzone – keine Plakette nötig."
+    ],
+    callSon: "Vadym anrufen",
+    sos: "Notruf: 112",
+    sosHint: "Eine Nummer für Polizei, Rettungsdienst und Feuerwehr."
+  }
+};
+
+function btnHtml(b){
+  const [href, label, kind, icon] = b;
+  const ext = href.indexOf("tel:") === 0 ? '' : ' target="_blank" rel="noopener"';
+  return '<a class="btn ' + kind + '" href="' + href + '"' + ext + '>' + icon + '<span>' + label + '</span></a>';
+}
+
+function render(lang){
+  const d = T[lang];
+  document.documentElement.lang = lang;
+  document.title = d.pageTitle;
+  document.getElementById("title").textContent = d.title;
+  document.getElementById("date").textContent = d.date;
+  document.getElementById("howto").innerHTML = d.howto;
+  document.getElementById("weather").textContent = d.weather;
+  document.getElementById("prepTitle").textContent = d.prepTitle;
+  document.getElementById("prep").innerHTML = d.prep.map(p =>
+    '<li>' + p.t + (p.b ? '<div class="btns">' + p.b.map(btnHtml).join("") + '</div>' : '') + '</li>'
+  ).join("");
+  document.getElementById("routeTitle").textContent = d.routeTitle;
+  document.getElementById("late").textContent = d.late;
+  document.getElementById("route").innerHTML = d.steps.map((s, i) => {
+    const tag = s.ordered ? "ol" : "ul";
+    return '<li class="stop">' +
+      '<span class="marker" aria-hidden="true">' + (i + 1) + '</span>' +
+      '<p class="time">' + s.time + '</p>' +
+      '<h3>' + s.title + '</h3>' +
+      '<' + tag + '>' + s.items.map(x => '<li>' + x + '</li>').join("") + '</' + tag + '>' +
+      (s.note ? '<p class="note">' + s.note + '</p>' : '') +
+      (s.buttons ? '<div class="btns">' + s.buttons.map(btnHtml).join("") + '</div>' : '') +
+      '</li>';
+  }).join("");
+  document.getElementById("rulesTitle").textContent = d.rulesTitle;
+  document.getElementById("rules").innerHTML = d.rules.map(r => '<li>' + r + '</li>').join("");
+  document.getElementById("sosBtn").innerHTML = btnHtml([CALL_SON, d.callSon, "call-son", ICON_PHONE]) + '<a class="btn call" href="tel:112">' + ICON_PHONE + '<span>' + d.sos + '</span></a>';
+  document.getElementById("sosHint").textContent = d.sosHint;
+  document.getElementById("topCall").innerHTML = btnHtml([CALL_SON, d.callSon, "call-son", ICON_PHONE]);
+  document.querySelectorAll(".lang-switch button").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.lang === lang))
+  );
+  try { localStorage.setItem("trip-lang", lang); } catch (e) {}
+}
+
+let start = (location.hash || "").replace("#", "");
+if (!T[start]) {
+  try { start = localStorage.getItem("trip-lang") || ""; } catch (e) { start = ""; }
+}
+if (!T[start]) start = "uk";
+
+document.querySelectorAll(".lang-switch button").forEach(b =>
+  b.addEventListener("click", () => { render(b.dataset.lang); window.scrollTo(0, 0); })
+);
+render(start);
+</script>
+</body>
+</html>
