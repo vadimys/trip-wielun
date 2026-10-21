@@ -203,11 +203,11 @@ a:focus-visible, button:focus-visible{ outline:3px solid var(--route); outline-o
 </main>
 
 <script>
-const NAV_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Parking%20Wratislavia%20Center%2C%20Rze%C5%BAnicza%2C%20Wroc%C5%82aw&destination_place_id=ChIJV2YHOHXCD0cRhSdgSz6TCog&travelmode=driving&dir_action=navigate";
+const NAV_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Interparking%20Parking%20NFM%2C%20plac%20Wolno%C5%9Bci%201%2C%20Wroc%C5%82aw&destination_place_id=ChIJb2qtUHPCD0cRWBRJjermKNM&travelmode=driving&dir_action=navigate";
 const NAV_HOTEL = "https://www.google.com/maps/dir/?api=1&destination=Hotel%20Pod%20Ratuszem%2C%20Kr%C3%B3lewska%209%2C%20Wielu%C5%84&destination_place_id=ChIJm0XH22B_GkcR89u8-PAPhd0&travelmode=driving&dir_action=navigate";
 const WALK_RYNEK = "https://www.google.com/maps/dir/?api=1&destination=Stary%20Ratusz%2C%20Rynek%2C%20Wroc%C5%82aw&destination_place_id=ChIJ8apiJ_fDD0cRQE-CbjJj_Uo&travelmode=walking";
-const WALK_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Parking%20Wratislavia%20Center%2C%20Rze%C5%BAnicza%2C%20Wroc%C5%82aw&destination_place_id=ChIJV2YHOHXCD0cRhSdgSz6TCog&travelmode=walking";
-const SHOW_RESTAURANT = "https://www.google.com/maps/search/?api=1&query=Czarnomorka%20Wroc%C5%82aw&query_place_id=ChIJZVnvtqfDD0cRtCuuNryg65A";
+const WALK_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Interparking%20Parking%20NFM%2C%20plac%20Wolno%C5%9Bci%201%2C%20Wroc%C5%82aw&destination_place_id=ChIJb2qtUHPCD0cRWBRJjermKNM&travelmode=walking";
+const WALK_RESTAURANT = "https://www.google.com/maps/dir/?api=1&destination=Czarnomorka%20Wroc%C5%82aw%2C%20%C5%9Awi%C4%99tego%20Miko%C5%82aja%2067&destination_place_id=ChIJZVnvtqfDD0cRtCuuNryg65A&travelmode=walking";
 const APP_IOS = "https://apps.apple.com/app/google-maps/id585027354";
 const APP_ANDROID = "https://play.google.com/store/apps/details?id=com.google.android.apps.maps";
 const CALL_SON = "tel:+48881445735";
@@ -246,32 +246,31 @@ const T = {
         buttons: [[NAV_PARKING, "Маршрут до паркінгу у Вроцлаві", "go", ICON_PIN]] },
       { time: "≈ 11:45", title: "Паркінг у Вроцлаві",
         items: [
-          "Google Maps привезе вас до в’їзду в підземний паркінг.",
-          "Камера сама зчитає номер машини, і шлагбаум відкриється. Талон брати не треба.",
-          "Усередині їдьте повільно й шукайте вільне місце.",
+          "Google Maps привезе вас до в’їзду в підземний паркінг під Національним форумом музики (NFM).",
+          "Біля шлагбаума візьміть квиток з автомата — шлагбаум відкриється. Квиток сховайте в гаманець і про всяк випадок сфотографуйте: він потрібен для оплати й виїзду.",
+          "Усередині їдьте повільно. Табло показують, де є вільні місця.",
           "Поставили машину? Сфотографуйте табличку з номером поверху чи сектора — так потім легко її знайдете.",
-          "Сфотографуйте номер машини: його треба буде ввести в автоматі для оплати.",
           "Напишіть нам, що доїхали."
         ] },
       { time: "12:00", title: "Обід у ресторані Czarnomorka",
         items: [
-          "Ресторан у цій самій будівлі, прямо над паркінгом. Просто підніміться нагору.",
+          "Вийдіть з паркінгу пішки й натисніть синю кнопку — Google Maps поведе вас до ресторану. Це приблизно 8–10 хвилин.",
           "Відкривається о 12:00. Тут готують рибу й морепродукти."
         ],
-        buttons: [[SHOW_RESTAURANT, "Показати ресторан на карті", "alt", ICON_PIN]] },
+        buttons: [[WALK_RESTAURANT, "Пішки до ресторану", "go", ICON_PIN]] },
       { time: "13:00", title: "Прогулянка по Ринку",
         items: [
-          "До головної площі (Ринку) близько 5 хвилин пішки. Перша кнопка покаже дорогу.",
+          "Від ресторану до головної площі (Ринку) близько 5 хвилин пішки. Перша кнопка покаже дорогу.",
           "Подивіться на стару Ратушу й кольорові будинки довкола. По місту стоять маленькі бронзові гномики — їх весело шукати.",
           "Під ногами бруківка, тому важливе зручне взуття.",
-          "О 14:15 повертайтеся до паркінгу. Друга кнопка покаже дорогу назад."
+          "Близько 14:00 рушайте назад до паркінгу — це приблизно 10 хвилин. Друга кнопка покаже дорогу."
         ],
         buttons: [[WALK_RYNEK, "Пішки до Ринку", "go", ICON_PIN], [WALK_PARKING, "Пішки назад до паркінгу", "alt", ICON_PIN]] },
       { time: "14:15", title: "Оплата паркінгу", ordered: true,
         items: [
           "Знайдіть у паркінгу автомат для оплати (паркомат).",
-          "Введіть номер машини (він у вас на фото).",
-          "Автомат покаже суму. Оплатіть карткою.",
+          "Вставте в автомат квиток.",
+          "Автомат покаже суму. Оплатіть карткою й заберіть квиток назад — він потрібен на виїзді.",
           "Одразу йдіть до машини."
         ],
         note: "Якщо щось не виходить — подзвоніть нам.",
@@ -279,7 +278,7 @@ const T = {
       { time: "14:30", title: "Їдемо до Велюня",
         items: [
           "Сядьте в машину й ще до того, як рушити, натисніть синю кнопку. Дочекайтеся, поки з’явиться маршрут.",
-          "На виїзді шлагбаум має відкритися сам.",
+          "На виїзді вставте квиток у стовпчик біля шлагбаума — шлагбаум відкриється.",
           "Дорога близько 130 км, приблизно півтори години.",
           "Напишіть нам, що виїхали."
         ],
@@ -334,32 +333,31 @@ const T = {
         buttons: [[NAV_PARKING, "Route zum Parkhaus in Wrocław", "go", ICON_PIN]] },
       { time: "≈ 11:45", title: "Parkhaus in Wrocław (Breslau)",
         items: [
-          "Google Maps bringt Sie zur Einfahrt der Tiefgarage.",
-          "Eine Kamera liest das Kennzeichen, die Schranke öffnet sich von selbst. Kein Ticket nötig.",
-          "Drinnen langsam fahren und einen freien Platz suchen.",
+          "Google Maps bringt Sie zur Einfahrt der Tiefgarage unter dem Nationalen Musikforum (NFM).",
+          "An der Schranke ein Ticket ziehen – die Schranke öffnet sich. Das Ticket gut aufbewahren und zur Sicherheit fotografieren: Sie brauchen es zum Bezahlen und für die Ausfahrt.",
+          "Drinnen langsam fahren. Anzeigetafeln zeigen, wo Plätze frei sind.",
           "Geparkt? Fotografieren Sie das Schild mit Etage oder Bereich neben dem Auto – so finden Sie es leicht wieder.",
-          "Fotografieren Sie auch das Kennzeichen: Sie müssen es am Kassenautomaten eingeben.",
           "Schreiben Sie uns kurz, dass Sie angekommen sind."
         ] },
       { time: "12:00", title: "Mittagessen im Restaurant Czarnomorka",
         items: [
-          "Das Restaurant ist im selben Gebäude, direkt über dem Parkhaus. Einfach nach oben gehen.",
+          "Gehen Sie zu Fuß aus dem Parkhaus und tippen Sie auf den blauen Knopf – Google Maps führt Sie zum Restaurant. Das sind etwa 8–10 Minuten.",
           "Es öffnet um 12:00 Uhr. Es gibt Fisch und Meeresfrüchte."
         ],
-        buttons: [[SHOW_RESTAURANT, "Restaurant auf der Karte zeigen", "alt", ICON_PIN]] },
+        buttons: [[WALK_RESTAURANT, "Zu Fuß zum Restaurant", "go", ICON_PIN]] },
       { time: "13:00", title: "Spaziergang über den Marktplatz (Rynek)",
         items: [
-          "Zum Marktplatz sind es etwa 5 Minuten zu Fuß. Der erste Knopf zeigt den Weg.",
+          "Vom Restaurant zum Marktplatz sind es etwa 5 Minuten zu Fuß. Der erste Knopf zeigt den Weg.",
           "Sehenswert: das alte Rathaus und die bunten Bürgerhäuser ringsum. Überall in der Stadt stehen kleine Bronzezwerge – es macht Spaß, sie zu suchen.",
           "Es gibt Kopfsteinpflaster, also bequeme Schuhe tragen.",
-          "Um 14:15 zurück zum Parkhaus. Der zweite Knopf zeigt den Weg zurück."
+          "Gegen 14:00 zurück zum Parkhaus gehen – etwa 10 Minuten. Der zweite Knopf zeigt den Weg."
         ],
         buttons: [[WALK_RYNEK, "Zu Fuß zum Marktplatz", "go", ICON_PIN], [WALK_PARKING, "Zu Fuß zurück zum Parkhaus", "alt", ICON_PIN]] },
       { time: "14:15", title: "Parken bezahlen", ordered: true,
         items: [
           "Suchen Sie im Parkhaus den Kassenautomaten.",
-          "Geben Sie das Kennzeichen ein (Sie haben es als Foto).",
-          "Der Automat zeigt den Betrag. Mit Karte bezahlen.",
+          "Stecken Sie das Ticket in den Automaten.",
+          "Der Automat zeigt den Betrag. Mit Karte bezahlen und das Ticket wieder mitnehmen – Sie brauchen es an der Ausfahrt.",
           "Danach direkt zum Auto gehen."
         ],
         note: "Wenn etwas nicht klappt, rufen Sie uns an.",
@@ -367,7 +365,7 @@ const T = {
       { time: "14:30", title: "Weiter nach Wieluń",
         items: [
           "Setzen Sie sich ins Auto und tippen Sie noch vor dem Losfahren auf den blauen Knopf. Warten Sie, bis die Route erscheint.",
-          "Die Schranke an der Ausfahrt sollte sich von selbst öffnen.",
+          "An der Ausfahrt das Ticket in die Säule an der Schranke stecken – die Schranke öffnet sich.",
           "Die Strecke ist etwa 130 km lang, rund anderthalb Stunden.",
           "Schreiben Sie uns kurz, dass Sie losgefahren sind."
         ],
