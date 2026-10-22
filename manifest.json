@@ -1,0 +1,13 @@
+{
+  "name": "Berlin → Wrocław → Wieluń",
+  "short_name": "Wieluń 23.10",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#F5F7FA",
+  "theme_color": "#1559C7",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
