@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Поїздка до Велюня / Reise nach Wieluń</title>
+<title>Дорога додому / Heimfahrt</title>
 <meta name="theme-color" content="#1559C7">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -249,18 +249,14 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
     <div class="btns top-call" id="topCall"></div>
   </header>
 
-  <section class="now" id="now" hidden aria-live="polite">
+  <section class="now" id="now" aria-live="polite">
     <p class="now-label" id="nowLabel"></p>
     <p class="now-title" id="nowTitle"></p>
     <p class="now-line" id="nowLine"></p>
+    <p class="now-line" id="darkLine" hidden></p>
     <div class="btns" id="nowBtn"></div>
     <p class="dep-line" id="depLine" hidden></p>
   </section>
-
-  <details class="panel prep" id="prepBox">
-    <summary><h2 id="prepTitle"></h2></summary>
-    <ol id="prep"></ol>
-  </details>
 
   <section aria-labelledby="routeTitle">
     <div class="route-head"><h2 id="routeTitle"></h2></div>
@@ -282,29 +278,24 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 </main>
 
 <script>
-/* ---------- trip constants (minutes after midnight) ---------- */
-const TRIP_DATE = "2026-10-23";
-const ARRIVE_TARGET = 17 * 60 + 30;          // be in Wieluń by 17:30
-const DRIVE1 = 225, BREAK1 = 30;             // Berlin → Wrocław: ~3 h 45 min + one break
-const DRIVE2 = 90, BUFFER2 = 15;             // Wrocław → Wieluń: ~1.5 h + spare time
-const LEAVE_LATEST = ARRIVE_TARGET - DRIVE2 - BUFFER2;   // leave the car park by 15:45
-const SETTLE = 10, TO_REST = 10, LUNCH = 60, RETURN = 15, OPENS = 12 * 60;
-const DIRECT_DRIVE = DRIVE1 + DRIVE2, DIRECT_BREAKS = 40;
-const DEFAULT_DEP = 7 * 60 + 30;
+/* ---------- return trip: Wieluń → shop in Kępno → home in Berlin (minutes after midnight) ---------- */
+const DRIVE_TO_SHOP = 45;        // Wieluń → Kępno, ~45 km (estimate)
+const SHOP_TIME = 45;            // time for shopping
+const DRIVE_HOME = 270;          // Kępno → Berlin, ~430 km, ~4.5 h without stops (estimate)
+const BREAKS = 40;               // two breaks of ~20 min
+const FIRST_BREAK_AFTER = 120;   // ~2 h after the shop, around Legnica
+const DIRECT_HOME = DRIVE_TO_SHOP + DRIVE_HOME;   // without the shop
+const SUGGESTED_DEP = 10 * 60;   // used when planning the next day
+const SHOP_HOURS = { sun: [10 * 60, 19 * 60], other: [9 * 60, 20 * 60] };   // Google Maps listing
+const HOME = { lat: 52.48614, lon: 13.4467 };
 
 const PHONE = "48881445735";
 const WA = "https://wa.me/" + PHONE;
 const CALL_SON = "tel:+" + PHONE;
-const NAV_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Interparking%20Parking%20NFM%2C%20plac%20Wolno%C5%9Bci%201%2C%20Wroc%C5%82aw&destination_place_id=ChIJb2qtUHPCD0cRWBRJjermKNM&travelmode=driving&dir_action=navigate";
-const NAV_HOTEL = "https://www.google.com/maps/dir/?api=1&destination=Hotel%20Pod%20Ratuszem%2C%20Kr%C3%B3lewska%209%2C%20Wielu%C5%84&destination_place_id=ChIJm0XH22B_GkcR89u8-PAPhd0&travelmode=driving&dir_action=navigate";
-const WALK_RESTAURANT = "https://www.google.com/maps/dir/?api=1&destination=Czarnomorka%20Wroc%C5%82aw%2C%20%C5%9Awi%C4%99tego%20Miko%C5%82aja%2067&destination_place_id=ChIJZVnvtqfDD0cRtCuuNryg65A&travelmode=walking";
-const WALK_RYNEK = "https://www.google.com/maps/dir/?api=1&destination=Stary%20Ratusz%2C%20Rynek%2C%20Wroc%C5%82aw&destination_place_id=ChIJ8apiJ_fDD0cRQE-CbjJj_Uo&travelmode=walking";
-const WALK_PARKING = "https://www.google.com/maps/dir/?api=1&destination=Interparking%20Parking%20NFM%2C%20plac%20Wolno%C5%9Bci%201%2C%20Wroc%C5%82aw&destination_place_id=ChIJb2qtUHPCD0cRWBRJjermKNM&travelmode=walking";
-const APP_IOS = "https://apps.apple.com/app/google-maps/id585027354";
-const APP_ANDROID = "https://play.google.com/store/apps/details?id=com.google.android.apps.maps";
+const NAV_SHOP = "https://www.google.com/maps/dir/?api=1&destination=KRAJ%20MARKET%2C%20Boczna%202B%2C%20K%C4%99pno&destination_place_id=ChIJ-XpB3GYLEEcRdKetV-b-6lQ&travelmode=driving&dir_action=navigate";
+const NAV_HOME = "https://www.google.com/maps/dir/?api=1&destination=Wildenbruchstra%C3%9Fe%20%26%20Harzer%20Stra%C3%9Fe%2C%2012059%20Berlin&destination_place_id=EkZXaWxkZW5icnVjaHN0ci4gJiBIYXJ6ZXIgU3RyLiwgQmV6aXJrIE5ldWvDtmxsbiwgMTIwNTkgQmVybGluLCBHZXJtYW55ImYiZAoUChIJW0_j46hPqEcRXYBpkOYkZrUSFAoSCVtP4-OoT6hHEV2AaZDmJGa1GhQKEglRpkrvqE-oRxHF0Xt6GH7z6hoUChIJqWnWVqhPqEcRdQSRyAow_5ciCg19yUgfFZu_Awg&travelmode=driving&dir_action=navigate";
 
 const ICON_PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
-const ICON_APP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>';
 const ICON_PHONE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>';
 const ICON_CHAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9.5L5 21.5V18H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>';
 const ICON_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>';
@@ -314,7 +305,7 @@ const ICON_CAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="curren
 const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, "0");
 const hm = (m) => pad(Math.floor(m / 60) % 24) + ":" + pad(m % 60);
-const approx = (m) => hm(Math.round(m / 5) * 5);     // rounded to 5 minutes for "≈" times
+const approx = (m) => hm(Math.round(m / 5) * 5);
 function store(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
 function load(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
 function btnHtml(b){
@@ -323,138 +314,99 @@ function btnHtml(b){
   return '<a class="btn ' + kind + '" href="' + href + '"' + ext + (id ? ' id="' + id + '"' : '') + '>' + icon + '<span>' + label + '</span></a>';
 }
 function waText(text){ return WA + "?text=" + encodeURIComponent(text); }
+function ymd(dt){ return dt.getFullYear() + "-" + pad(dt.getMonth() + 1) + "-" + pad(dt.getDate()); }
+
+/* Sunset (NOAA approximation, ±2 min), in local clock minutes — works offline and handles the clock change. */
+function sunsetMinutes(lat, lon, dt){
+  const y = dt.getFullYear(), mo = dt.getMonth(), d = dt.getDate(), rad = Math.PI / 180;
+  const doy = Math.round((Date.UTC(y, mo, d) - Date.UTC(y, 0, 0)) / 86400000);
+  const g = 2 * Math.PI / 365 * (doy - 1);
+  const eqt = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl)) / rad;
+  return Math.round(720 - 4 * (lon - ha) - eqt - new Date(y, mo, d, 12).getTimezoneOffset());
+}
 
 /* ---------- the adaptive plan ---------- */
-function makePlan(D){
-  const p = { D: D, A: D + DRIVE1 + BREAK1 };
-  const avail = LEAVE_LATEST - (p.A + SETTLE) - RETURN;   // free time in Wrocław
-  if (avail >= 70) {
-    p.mode = "lunch";
-    const ready = p.A + SETTLE + TO_REST;
-    p.lunchStart = Math.max(ready, OPENS);
-    p.preWalk = p.lunchStart - ready;
-    const lunchEnd = p.lunchStart + LUNCH;
-    const room = Math.min(LEAVE_LATEST - RETURN - lunchEnd, 90);
-    if (room >= 15) { p.walkStart = lunchEnd; p.walkLen = room; p.L = lunchEnd + room + RETURN; }
-    else { p.walkLen = 0; p.L = lunchEnd + RETURN; }
-  } else if (avail >= 30) {
-    p.mode = "coffee";
-    p.coffeeStart = p.A + SETTLE;
-    p.coffeeLen = Math.min(avail, 75);
-    p.L = p.coffeeStart + p.coffeeLen + RETURN;
+function makePlan(D, dt){
+  const sunday = dt.getDay() === 0;
+  const [open, close] = sunday ? SHOP_HOURS.sun : SHOP_HOURS.other;
+  const p = { D: D, open: open, close: close, sunday: sunday };
+  p.S0 = D + DRIVE_TO_SHOP;
+  p.shopStart = Math.max(p.S0, open);
+  p.wait = p.shopStart - p.S0;
+  if (p.shopStart <= close - 20) {
+    p.mode = "shop";
+    p.shopEnd = Math.min(p.shopStart + SHOP_TIME, close);
+    p.breakAt = p.shopEnd + FIRST_BREAK_AFTER;
+    p.H = p.shopEnd + DRIVE_HOME + BREAKS;
   } else {
-    p.mode = "direct";
+    p.mode = "noshop";
+    p.breakAt = D + DRIVE_TO_SHOP + FIRST_BREAK_AFTER;
+    p.H = D + DIRECT_HOME + BREAKS;
   }
-  p.H = p.mode === "direct" ? D + DIRECT_DRIVE + DIRECT_BREAKS : p.L + DRIVE2;
+  p.sunset = sunsetMinutes(HOME.lat, HOME.lon, dt);
   return p;
+}
+/* Latest departure that still gets them home before dark (searching back in 5-minute steps). */
+function latestDaylightDeparture(dt){
+  for (let D = 20 * 60; D >= 6 * 60; D -= 5) { const x = makePlan(D, dt); if (x.H <= x.sunset) return D; }
+  return null;
 }
 
 /* ---------- texts ---------- */
 const T = {
   uk: {
-    pageTitle: "Поїздка до Велюня, 23 жовтня",
-    title: "Берлін → Вроцлав → Велюнь",
-    date: "П’ятниця, 23 жовтня",
+    locale: "uk-UA",
+    pageTitle: "Дорога додому: Велюнь → Берлін",
+    title: "Велюнь → Кемпно → Берлін",
     howto: "<strong>Сині кнопки</strong> відкривають Google Maps з маршрутом, <strong>зелені</strong> — повідомлення або дзвінок Вадиму. Щоб повернутися до плану, знову відкрийте браузер або іконку на екрані телефона.",
     callSon: "Подзвонити Вадиму",
     bigger: "Збільшити шрифт", smaller: "Зменшити шрифт",
-    prepTitle: "Підготовка напередодні",
-    prep: [
-      { t: "Встановіть на телефон програму Google Maps, якщо її ще немає.",
-        b: [[APP_IOS, "Google Maps для iPhone", "alt", ICON_APP], [APP_ANDROID, "Google Maps для Android", "alt", ICON_APP]] },
-      { t: "Увімкніть на телефоні геолокацію (місцезнаходження)." },
-      { t: "Додайте цю сторінку на головний екран телефона. Тоді вона відкриватиметься одним дотиком і навіть без інтернету — наприклад, у підземному паркінгу.",
-        sub: "iPhone: у Safari натисніть «Поділитися» (квадрат зі стрілкою вгору) → «На екран „Додому“». Android: у Chrome натисніть ⋮ → «Додати на головний екран»." },
-      { t: "Зарядіть телефон. Візьміть у машину зарядку й тримач для телефона." },
-      { t: "Візьміть паспорт, водійські права, документи на машину, банківську картку, зручне взуття й теплу куртку на вечір." }
-    ],
-    routeTitle: "Ваш день",
-    late: "План сам підлаштовується під час, коли ви виїдете. Не поспішайте — головне доїхати спокійно, орієнтовно до 17:30.",
-    whenReady: "Коли будете готові",
-    steps: (p, departed) => {
+    routeTitle: "Дорога додому",
+    late: "План сам підлаштовується під час, коли ви рушите. Не поспішайте — їдьте спокійно, з перервами.",
+    steps: (p, departed, tomorrow) => {
       const s = [];
-      const direct = p.mode === "direct";
-      s.push({ k: "dep", s: p.D, time: departed ? hm(p.D) : "Коли будете готові", title: "Виїзд з Берліна",
-        items: direct ? [
-          "Сьогодні без зупинки у Вроцлаві — так буде спокійніше. Їдьте одразу до готелю.",
-          "Дорога близько 470 км, приблизно 5 год 15 хв без зупинок. Зробіть 1–2 перерви на заправках по 20–30 хвилин.",
-          "Їдьте через Вроцлав: A15 → A18 → A4 → S8. Якщо Google Maps запропонує маршрут через Познань (A2) — там платна ділянка."
-        ] : [
+      const shop = p.mode === "shop";
+      s.push({ k: "dep", s: p.D, time: departed ? hm(p.D) : "Коли будете готові", title: "Виїзд з Велюня",
+        items: shop ? [
           "Натисніть синю кнопку, коли вже сидите в машині. Якщо навігація не почалася сама, натисніть унизу «Старт» (Start).",
-          "До Вроцлава близько 343 км, приблизно 3 год 45 хв без зупинок. Платних доріг немає.",
-          "Маршрут іде через кордон біля Forst: A15 → A18 → A4.",
-          "Десь на півдорозі зупиніться на 20–30 хвилин: кава, туалет."
+          "До магазину в Кемпно близько 45 км — приблизно 45 хвилин."
+        ] : [
+          "Магазин сьогодні вже не встигнете (працює до " + hm(p.close) + "), тож їдьте одразу додому.",
+          "Натисніть синю кнопку, коли вже сидите в машині. Якщо навігація не почалася сама, натисніть унизу «Старт» (Start).",
+          "Дорога близько 470 км, приблизно 5 годин без зупинок."
         ],
-        wx: { place: "berlin", from: p.D, to: p.D },
-        buttons: [direct ? [NAV_HOTEL, "Маршрут до готелю у Велюні", "go", ICON_PIN] : [NAV_PARKING, "Маршрут до паркінгу у Вроцлаві", "go", ICON_PIN]],
+        wx: { place: "wielun", at: p.D },
+        buttons: [shop ? [NAV_SHOP, "Маршрут до магазину в Кемпно", "go", ICON_PIN] : [NAV_HOME, "Маршрут додому", "go", ICON_PIN]],
         live: true });
-      if (!direct) {
-        s.push({ k: "park", s: p.A, time: "≈ " + approx(p.A), title: "Паркінг у Вроцлаві",
+      if (shop) {
+        const items = ["Український продуктовий магазин KRAJ MARKET: вул. Boczna 2B, Kępno.",
+                       (tomorrow ? "Завтра працює з " : "Сьогодні працює з ") + hm(p.open) + " до " + hm(p.close) + "."];
+        if (p.wait >= 5) items.push("Ви будете там ≈ " + approx(p.S0) + ", а магазин відкривається о " + hm(p.open) + " — трохи зачекайте або виїжджайте пізніше.");
+        items.push("На закупи закладено ≈ 45 хвилин — не поспішайте.");
+        s.push({ k: "shop", s: p.shopStart, time: "≈ " + approx(p.shopStart), title: "Закупи в Кемпно", items: items });
+        s.push({ k: "drive", s: p.shopEnd, time: "≈ " + approx(p.shopEnd), title: "Їдемо додому",
           items: [
-            "Google Maps привезе вас до в’їзду в підземний паркінг під Національним форумом музики (NFM).",
-            "Біля шлагбаума візьміть квиток з автомата — шлагбаум відкриється. Квиток сховайте в гаманець і про всяк випадок сфотографуйте: він потрібен для оплати й виїзду.",
-            "Усередині їдьте повільно. Табло показують, де є вільні місця.",
-            "Поставили машину? Сфотографуйте табличку з номером поверху чи сектора — так потім легко її знайдете."
+            "Ще на парковці магазину натисніть синю кнопку й дочекайтеся, поки з’явиться маршрут.",
+            "До дому близько 430 км, приблизно 4 год 30 хв без зупинок.",
+            "Найпростіше — через Вроцлав, як і їхали сюди: S8 → A8 → A4 → A18 → кордон біля Forst → A15. Платних доріг тут немає.",
+            "Якщо Google Maps запропонує маршрут через Познань (A2) — там платна ділянка, тож краще вибрати варіант через Вроцлав."
           ],
-          msg: ["Написати Вадиму: ми у Вроцлаві", "Ми на паркінгу у Вроцлаві 🅿️"] });
+          buttons: [[NAV_HOME, "Маршрут додому", "go", ICON_PIN]],
+          msg: ["Написати Вадиму: їдемо додому", "Закупилися, їдемо додому 🚗"] });
       }
-      if (p.mode === "lunch") {
-        const items = [];
-        if (p.preWalk >= 20) items.push("Ресторан відкривається о 12:00 — до того прогуляйтеся по Ринку.");
-        items.push("Вийдіть з паркінгу пішки й натисніть синю кнопку — Google Maps поведе вас до ресторану. Це приблизно 8–10 хвилин.");
-        items.push("Тут готують рибу й морепродукти. Якщо не хочеться в ресторан — просто посидьте в будь-якій кав’ярні на Ринку.");
-        const btns = [[WALK_RESTAURANT, "Пішки до ресторану", "go", ICON_PIN]];
-        let wx = null;
-        if (!p.walkLen) {
-          items.push("Після обіду поверніться до паркінгу (≈ 10 хв пішки) — можна пройти через Ринок.");
-          btns.push([WALK_PARKING, "Пішки назад до паркінгу", "alt", ICON_PIN]);
-          wx = { place: "wroclaw", from: p.A, to: p.L };
-        }
-        s.push({ k: "lunch", s: p.lunchStart, time: "≈ " + approx(p.lunchStart), title: "Обід у Czarnomorka (за бажанням)", items: items, wx: wx, buttons: btns });
-        if (p.walkLen) {
-          s.push({ k: "walk", s: p.walkStart, time: "≈ " + approx(p.walkStart), title: "Прогулянка по Ринку, ≈ " + fmtDur(p.walkLen, "uk"),
-            items: [
-              "Від ресторану до головної площі (Ринку) близько 5 хвилин пішки. Перша кнопка покаже дорогу.",
-              "Подивіться на стару Ратушу й кольорові будинки довкола. По місту стоять маленькі бронзові гномики — їх весело шукати.",
-              "Під ногами бруківка, тому важливе зручне взуття.",
-              "Близько " + approx(p.L - RETURN) + " рушайте назад до паркінгу — це приблизно 10 хвилин. Друга кнопка покаже дорогу."
-            ],
-            wx: { place: "wroclaw", from: p.A, to: p.L },
-            buttons: [[WALK_RYNEK, "Пішки до Ринку", "go", ICON_PIN], [WALK_PARKING, "Пішки назад до паркінгу", "alt", ICON_PIN]] });
-        }
-      }
-      if (p.mode === "coffee") {
-        s.push({ k: "coffee", s: p.coffeeStart, time: "≈ " + approx(p.coffeeStart), title: "Кава й коротка прогулянка, ≈ " + fmtDur(p.coffeeLen, "uk"),
-          items: [
-            "Часу небагато, тож сьогодні без ресторану. Дійдіть до Ринку (≈ 10 хв пішки), випийте кави в кав’ярні й подивіться на стару Ратушу.",
-            "Близько " + approx(p.L - RETURN) + " рушайте назад до паркінгу. Друга кнопка покаже дорогу."
-          ],
-          wx: { place: "wroclaw", from: p.A, to: p.L },
-          buttons: [[WALK_RYNEK, "Пішки до Ринку", "go", ICON_PIN], [WALK_PARKING, "Пішки назад до паркінгу", "alt", ICON_PIN]] });
-      }
-      if (!direct) {
-        s.push({ k: "pay", s: p.L - 10, time: "≈ " + approx(p.L - 10), title: "Оплата паркінгу", ordered: true,
-          items: [
-            "Знайдіть у паркінгу автомат для оплати (паркомат).",
-            "Вставте в автомат квиток.",
-            "Автомат покаже суму. Оплатіть карткою й заберіть квиток назад — він потрібен на виїзді.",
-            "Одразу йдіть до машини."
-          ],
-          note: "Якщо щось не виходить — подзвоніть нам.",
-          buttons: [[CALL_SON, "Подзвонити Вадиму", "call-son", ICON_PHONE]] });
-        s.push({ k: "drive2", s: p.L, time: "≈ " + approx(p.L), title: "Їдемо до Велюня",
-          items: [
-            "Сядьте в машину й ще до того, як рушити, натисніть синю кнопку. Дочекайтеся, поки з’явиться маршрут.",
-            "На виїзді вставте квиток у стовпчик біля шлагбаума — шлагбаум відкриється.",
-            "Дорога близько 130 км, приблизно півтори години."
-          ],
-          buttons: [[NAV_HOTEL, "Маршрут до готелю у Велюні", "go", ICON_PIN]],
-          msg: ["Написати Вадиму: їдемо до Велюня", "Ми виїхали з Вроцлава, їдемо до Велюня 🚗"] });
-      }
-      s.push({ k: "hotel", s: p.H, time: "≈ " + approx(p.H), title: "Готель Pod Ratuszem, Велюнь",
-        items: ["Адреса: вул. Królewska 9, Wieluń.", "Біля готелю є власна безкоштовна стоянка.", "Ми вже чекаємо на вас!"],
-        wx: { place: "wielun", from: p.H, to: p.H, sunset: true },
-        msg: ["Написати Вадиму: ми в готелі", "Ми вже в готелі 🏨"] });
+      s.push({ k: "break", s: p.breakAt, time: "≈ " + approx(p.breakAt), title: "Перерва 20–30 хвилин",
+        items: [
+          "Приблизно через 2 години, біля Легниці, зупиніться на заправці або на місці відпочинку (MOP): кава, туалет, розім’ятися.",
+          "Ще одна коротка перерва — за бажанням, перед кордоном."
+        ],
+        wx: { place: "legnica", at: p.breakAt },
+        msg: ["Написати Вадиму: перерва, все добре", "Зупинилися на перерву, все добре ☕"] });
+      s.push({ k: "home", s: p.H, time: "≈ " + approx(p.H), title: "Вдома",
+        items: ["Напишіть нам, що доїхали, — ми будемо чекати."],
+        wx: { place: "berlin", at: p.H, sunset: true },
+        msg: ["Написати Вадиму: ми вдома", "Ми вдома, доїхали добре 🏠"] });
       return s;
     },
     live: {
@@ -474,137 +426,87 @@ const T = {
       "Пішохода пропускайте вже тоді, коли він тільки ступає на перехід.",
       "Автомагістраль — до 140, швидкісна дорога — до 120, поза містом — до 90 км/год.",
       "На автомагістралі дистанція — щонайменше половина швидкості в метрах: при 120 км/год це 60 м.",
-      "Алкоголь — практично нуль (межа 0,2 ‰).",
-      "У Вроцлаві немає екологічної зони, наклейка не потрібна."
+      "Алкоголь — практично нуль (межа 0,2 ‰)."
     ],
     sos: "Екстрена допомога: 112",
-    sosHint: "Один номер для поліції, швидкої та пожежної.",
+    sosHint: "Один номер для поліції, швидкої та пожежної — і в Польщі, і в Німеччині.",
     readyLabel: "Коли будете готові",
+    tomorrowLabel: "Завтра",
     readyTitle: "Виїжджайте без поспіху",
-    readyLine: (p) => p.mode === "direct"
-      ? "Якщо виїдете зараз — у Велюні ≈ " + approx(p.H) + "."
-      : "Якщо виїдете зараз — у Вроцлаві ≈ " + approx(p.A) + ", у Велюні ≈ " + approx(p.H) + ".",
-    departBtn: "Ми виїхали — написати Вадиму",
-    departMsg: "Ми виїхали з Берліна 🚗",
+    readyLine: (p, tomorrow) => (tomorrow ? "Наприклад, о " + hm(p.D) + ": " : "Якщо виїдете зараз: ") +
+      (p.mode === "shop" ? "у магазині ≈ " + approx(p.shopStart) + ", вдома ≈ " + approx(p.H) + "." : "вдома ≈ " + approx(p.H) + "."),
+    darkAdvice: (sun, latest) => "У Берліні темніє ≈ " + hm(sun) + ". Щоб доїхати засвітла, виїжджайте до ≈ " + approx(Math.floor(latest / 5) * 5) + ".",
+    darkLate: (sun) => "У Берліні темніє ≈ " + hm(sun) + ", тож останню частину дороги їхатимете в темряві. Нічого страшного — їдьте спокійно й робіть перерви.",
+    departBtn: "Ми рушили — почати план",
     depLabel: "Виїхали о",
     nowLabel: "За планом зараз",
-    arriveWroclaw: (t) => "Прибуття до Вроцлава ≈ " + t,
-    leaveParking: (t, left) => left ? "Виїзд з паркінгу орієнтовно о " + t + " (через " + left + ")" : "Час потихеньку виїжджати з паркінгу (орієнтовно " + t + ")",
-    arriveWielun: (t) => "Прибуття до Велюня ≈ " + t,
-    welcome: "Ласкаво просимо до Велюня!",
+    lines: {
+      dep: (p) => p.mode === "shop" ? "У магазині ≈ " + approx(p.shopStart) : "Перерва ≈ " + approx(p.breakAt),
+      shop: (p, left) => "Виїзд з магазину ≈ " + approx(p.shopEnd) + (left ? " (через " + left + ")" : ""),
+      drive: (p) => "Перерва ≈ " + approx(p.breakAt),
+      break: (p) => "Вдома ≈ " + approx(p.H),
+      home: () => "З поверненням додому!"
+    },
     show: "Показати крок",
     nowTag: "зараз", nextTag: "далі",
     hShort: "год", mShort: "хв",
     wi: 1,
-    city: { berlin: "Берлін", wroclaw: "Вроцлав", wielun: "Велюнь" },
-    rain: (p) => p < 20 ? "дощу майже напевно не буде" : p < 50 ? "можливий дощ, парасолька не завадить" : "ймовірно дощ, візьміть парасольку",
-    sunset: (t) => "захід сонця о " + t,
+    city: { wielun: "Велюнь", legnica: "Легниця", berlin: "Берлін" },
+    rain: (p) => p < 20 ? "дощу майже напевно не буде" : p < 50 ? "можливий дощ" : "ймовірно дощ — на трасі тримайте більшу дистанцію",
+    sunset: (t) => "темніє ≈ " + t,
     credit: (d, t) => 'Погода: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>, оновлено ' + d + " о " + t
   },
   de: {
-    pageTitle: "Reise nach Wieluń, 23. Oktober",
-    title: "Berlin → Wrocław → Wieluń",
-    date: "Freitag, 23. Oktober",
+    locale: "de-DE",
+    pageTitle: "Heimfahrt: Wieluń → Berlin",
+    title: "Wieluń → Kępno → Berlin",
     howto: "<strong>Blaue Knöpfe</strong> öffnen Google Maps mit der Route, <strong>grüne</strong> eine Nachricht oder einen Anruf an Vadym. Zurück zum Plan: einfach wieder den Browser oder das Symbol auf dem Startbildschirm öffnen.",
     callSon: "Vadym anrufen",
     bigger: "Schrift vergrößern", smaller: "Schrift verkleinern",
-    prepTitle: "Vorbereitung am Vortag",
-    prep: [
-      { t: "Installieren Sie die App Google Maps auf dem Handy, falls noch nicht vorhanden.",
-        b: [[APP_IOS, "Google Maps für iPhone", "alt", ICON_APP], [APP_ANDROID, "Google Maps für Android", "alt", ICON_APP]] },
-      { t: "Schalten Sie am Handy den Standort (GPS) ein." },
-      { t: "Legen Sie diese Seite auf den Startbildschirm. Dann öffnet sie sich mit einem Tippen – auch ohne Internet, zum Beispiel in der Tiefgarage.",
-        sub: "iPhone: in Safari auf „Teilen“ tippen (Quadrat mit Pfeil nach oben) → „Zum Home-Bildschirm“. Android: in Chrome auf ⋮ tippen → „Zum Startbildschirm hinzufügen“." },
-      { t: "Laden Sie das Handy auf. Nehmen Sie Ladekabel und Handyhalterung fürs Auto mit." },
-      { t: "Mitnehmen: Personalausweis oder Reisepass, Führerschein, Fahrzeugschein, Bankkarte, bequeme Schuhe und eine warme Jacke für den Abend." }
-    ],
-    routeTitle: "Ihr Tag",
-    late: "Der Plan passt sich automatisch an Ihre Abfahrtszeit an. Ganz ohne Eile – Hauptsache, Sie kommen entspannt an, ungefähr bis 17:30.",
-    whenReady: "Wenn Sie bereit sind",
-    steps: (p, departed) => {
+    routeTitle: "Heimfahrt",
+    late: "Der Plan passt sich automatisch an Ihre Abfahrtszeit an. Ganz ohne Eile – fahren Sie entspannt und mit Pausen.",
+    steps: (p, departed, tomorrow) => {
       const s = [];
-      const direct = p.mode === "direct";
-      s.push({ k: "dep", s: p.D, time: departed ? hm(p.D) : "Wenn Sie bereit sind", title: "Abfahrt in Berlin",
-        items: direct ? [
-          "Heute ohne Halt in Wrocław – so ist es entspannter. Fahren Sie direkt zum Hotel.",
-          "Die Strecke ist etwa 470 km lang, rund 5 Std. 15 Min. ohne Pausen. Machen Sie 1–2 Pausen an Tankstellen, je 20–30 Minuten.",
-          "Fahren Sie über Wrocław: A15 → A18 → A4 → S8. Schlägt Google Maps die Route über Poznań (A2) vor – dort gibt es einen mautpflichtigen Abschnitt."
-        ] : [
+      const shop = p.mode === "shop";
+      s.push({ k: "dep", s: p.D, time: departed ? hm(p.D) : "Wenn Sie bereit sind", title: "Abfahrt in Wieluń",
+        items: shop ? [
           "Tippen Sie auf den blauen Knopf, wenn Sie schon im Auto sitzen. Startet die Navigation nicht von selbst, tippen Sie unten auf „Start“.",
-          "Bis Wrocław sind es etwa 343 km, rund 3 Std. 45 Min. ohne Pausen. Keine Maut.",
-          "Die Route führt über den Grenzübergang bei Forst: A15 → A18 → A4.",
-          "Etwa auf halber Strecke 20–30 Minuten Pause machen: Kaffee, Toilette."
+          "Bis zum Laden in Kępno sind es etwa 45 km – rund 45 Minuten."
+        ] : [
+          "Den Laden schaffen Sie heute nicht mehr (geöffnet bis " + hm(p.close) + "), also direkt nach Hause.",
+          "Tippen Sie auf den blauen Knopf, wenn Sie schon im Auto sitzen. Startet die Navigation nicht von selbst, tippen Sie unten auf „Start“.",
+          "Die Strecke ist etwa 470 km lang, rund 5 Stunden ohne Pausen."
         ],
-        wx: { place: "berlin", from: p.D, to: p.D },
-        buttons: [direct ? [NAV_HOTEL, "Route zum Hotel in Wieluń", "go", ICON_PIN] : [NAV_PARKING, "Route zum Parkhaus in Wrocław", "go", ICON_PIN]],
+        wx: { place: "wielun", at: p.D },
+        buttons: [shop ? [NAV_SHOP, "Route zum Laden in Kępno", "go", ICON_PIN] : [NAV_HOME, "Route nach Hause", "go", ICON_PIN]],
         live: true });
-      if (!direct) {
-        s.push({ k: "park", s: p.A, time: "≈ " + approx(p.A), title: "Parkhaus in Wrocław (Breslau)",
+      if (shop) {
+        const items = ["Ukrainischer Lebensmittelladen KRAJ MARKET: ul. Boczna 2B, Kępno.",
+                       (tomorrow ? "Morgen geöffnet von " : "Heute geöffnet von ") + hm(p.open) + " bis " + hm(p.close) + " Uhr."];
+        if (p.wait >= 5) items.push("Sie sind etwa um " + approx(p.S0) + " dort, der Laden öffnet um " + hm(p.open) + " – kurz warten oder etwas später losfahren.");
+        items.push("Für den Einkauf sind etwa 45 Minuten eingeplant – ganz ohne Eile.");
+        s.push({ k: "shop", s: p.shopStart, time: "≈ " + approx(p.shopStart), title: "Einkaufen in Kępno", items: items });
+        s.push({ k: "drive", s: p.shopEnd, time: "≈ " + approx(p.shopEnd), title: "Heimfahrt",
           items: [
-            "Google Maps bringt Sie zur Einfahrt der Tiefgarage unter dem Nationalen Musikforum (NFM).",
-            "An der Schranke ein Ticket ziehen – die Schranke öffnet sich. Das Ticket gut aufbewahren und zur Sicherheit fotografieren: Sie brauchen es zum Bezahlen und für die Ausfahrt.",
-            "Drinnen langsam fahren. Anzeigetafeln zeigen, wo Plätze frei sind.",
-            "Geparkt? Fotografieren Sie das Schild mit Etage oder Bereich neben dem Auto – so finden Sie es leicht wieder."
+            "Noch auf dem Parkplatz des Ladens auf den blauen Knopf tippen und warten, bis die Route erscheint.",
+            "Bis nach Hause sind es etwa 430 km, rund 4 Std. 30 Min. ohne Pausen.",
+            "Am einfachsten über Wrocław, wie auf der Hinfahrt: S8 → A8 → A4 → A18 → Grenze bei Forst → A15. Keine Maut.",
+            "Schlägt Google Maps die Route über Poznań (A2) vor – dort gibt es einen mautpflichtigen Abschnitt, besser die Variante über Wrocław wählen."
           ],
-          msg: ["Vadym schreiben: in Wrocław angekommen", "Wir sind im Parkhaus in Wrocław 🅿️"] });
+          buttons: [[NAV_HOME, "Route nach Hause", "go", ICON_PIN]],
+          msg: ["Vadym schreiben: Heimfahrt", "Eingekauft, wir fahren jetzt nach Hause 🚗"] });
       }
-      if (p.mode === "lunch") {
-        const items = [];
-        if (p.preWalk >= 20) items.push("Das Restaurant öffnet um 12:00 Uhr – bis dahin ein wenig über den Marktplatz bummeln.");
-        items.push("Gehen Sie zu Fuß aus dem Parkhaus und tippen Sie auf den blauen Knopf – Google Maps führt Sie zum Restaurant. Das sind etwa 8–10 Minuten.");
-        items.push("Es gibt Fisch und Meeresfrüchte. Wenn Sie keine Lust auf ein Restaurant haben – setzen Sie sich einfach in ein Café am Marktplatz.");
-        const btns = [[WALK_RESTAURANT, "Zu Fuß zum Restaurant", "go", ICON_PIN]];
-        let wx = null;
-        if (!p.walkLen) {
-          items.push("Nach dem Essen zurück zum Parkhaus (≈ 10 Min. zu Fuß) – gern über den Marktplatz.");
-          btns.push([WALK_PARKING, "Zu Fuß zurück zum Parkhaus", "alt", ICON_PIN]);
-          wx = { place: "wroclaw", from: p.A, to: p.L };
-        }
-        s.push({ k: "lunch", s: p.lunchStart, time: "≈ " + approx(p.lunchStart), title: "Mittagessen im Czarnomorka (wenn Sie möchten)", items: items, wx: wx, buttons: btns });
-        if (p.walkLen) {
-          s.push({ k: "walk", s: p.walkStart, time: "≈ " + approx(p.walkStart), title: "Spaziergang über den Marktplatz, ≈ " + fmtDur(p.walkLen, "de"),
-            items: [
-              "Vom Restaurant zum Marktplatz (Rynek) sind es etwa 5 Minuten zu Fuß. Der erste Knopf zeigt den Weg.",
-              "Sehenswert: das alte Rathaus und die bunten Bürgerhäuser ringsum. Überall in der Stadt stehen kleine Bronzezwerge – es macht Spaß, sie zu suchen.",
-              "Es gibt Kopfsteinpflaster, also bequeme Schuhe tragen.",
-              "Gegen " + approx(p.L - RETURN) + " zurück zum Parkhaus gehen – etwa 10 Minuten. Der zweite Knopf zeigt den Weg."
-            ],
-            wx: { place: "wroclaw", from: p.A, to: p.L },
-            buttons: [[WALK_RYNEK, "Zu Fuß zum Marktplatz", "go", ICON_PIN], [WALK_PARKING, "Zu Fuß zurück zum Parkhaus", "alt", ICON_PIN]] });
-        }
-      }
-      if (p.mode === "coffee") {
-        s.push({ k: "coffee", s: p.coffeeStart, time: "≈ " + approx(p.coffeeStart), title: "Kaffee und kurzer Spaziergang, ≈ " + fmtDur(p.coffeeLen, "de"),
-          items: [
-            "Die Zeit ist knapp, deshalb heute ohne Restaurant. Gehen Sie zum Marktplatz (≈ 10 Min. zu Fuß), trinken Sie einen Kaffee und schauen Sie sich das alte Rathaus an.",
-            "Gegen " + approx(p.L - RETURN) + " zurück zum Parkhaus gehen. Der zweite Knopf zeigt den Weg."
-          ],
-          wx: { place: "wroclaw", from: p.A, to: p.L },
-          buttons: [[WALK_RYNEK, "Zu Fuß zum Marktplatz", "go", ICON_PIN], [WALK_PARKING, "Zu Fuß zurück zum Parkhaus", "alt", ICON_PIN]] });
-      }
-      if (!direct) {
-        s.push({ k: "pay", s: p.L - 10, time: "≈ " + approx(p.L - 10), title: "Parken bezahlen", ordered: true,
-          items: [
-            "Suchen Sie im Parkhaus den Kassenautomaten.",
-            "Stecken Sie das Ticket in den Automaten.",
-            "Der Automat zeigt den Betrag. Mit Karte bezahlen und das Ticket wieder mitnehmen – Sie brauchen es an der Ausfahrt.",
-            "Danach direkt zum Auto gehen."
-          ],
-          note: "Wenn etwas nicht klappt, rufen Sie uns an.",
-          buttons: [[CALL_SON, "Vadym anrufen", "call-son", ICON_PHONE]] });
-        s.push({ k: "drive2", s: p.L, time: "≈ " + approx(p.L), title: "Weiter nach Wieluń",
-          items: [
-            "Setzen Sie sich ins Auto und tippen Sie noch vor dem Losfahren auf den blauen Knopf. Warten Sie, bis die Route erscheint.",
-            "An der Ausfahrt das Ticket in die Säule an der Schranke stecken – die Schranke öffnet sich.",
-            "Die Strecke ist etwa 130 km lang, rund anderthalb Stunden."
-          ],
-          buttons: [[NAV_HOTEL, "Route zum Hotel in Wieluń", "go", ICON_PIN]],
-          msg: ["Vadym schreiben: unterwegs nach Wieluń", "Wir fahren jetzt von Wrocław nach Wieluń 🚗"] });
-      }
-      s.push({ k: "hotel", s: p.H, time: "≈ " + approx(p.H), title: "Hotel Pod Ratuszem, Wieluń",
-        items: ["Adresse: ul. Królewska 9, Wieluń.", "Das Hotel hat einen eigenen kostenlosen Parkplatz.", "Wir freuen uns auf Sie!"],
-        wx: { place: "wielun", from: p.H, to: p.H, sunset: true },
-        msg: ["Vadym schreiben: im Hotel", "Wir sind im Hotel angekommen 🏨"] });
+      s.push({ k: "break", s: p.breakAt, time: "≈ " + approx(p.breakAt), title: "Pause, 20–30 Minuten",
+        items: [
+          "Nach etwa 2 Stunden, bei Legnica, an einer Tankstelle oder einem Rastplatz (MOP) anhalten: Kaffee, Toilette, Beine vertreten.",
+          "Eine zweite kurze Pause vor der Grenze – wenn Sie möchten."
+        ],
+        wx: { place: "legnica", at: p.breakAt },
+        msg: ["Vadym schreiben: Pause, alles gut", "Wir machen Pause, alles gut ☕"] });
+      s.push({ k: "home", s: p.H, time: "≈ " + approx(p.H), title: "Zu Hause",
+        items: ["Schreiben Sie uns kurz, dass Sie gut angekommen sind – wir warten darauf."],
+        wx: { place: "berlin", at: p.H, sunset: true },
+        msg: ["Vadym schreiben: zu Hause", "Wir sind gut zu Hause angekommen 🏠"] });
       return s;
     },
     live: {
@@ -624,37 +526,40 @@ const T = {
       "Fußgänger schon vorlassen, wenn sie den Zebrastreifen gerade betreten.",
       "Autobahn bis 140, Schnellstraße bis 120, außerorts bis 90 km/h.",
       "Abstand auf Autobahn und Schnellstraße: mindestens halber Tacho in Metern, bei 120 km/h also 60 m.",
-      "Alkohol: praktisch null (Grenze 0,2 Promille).",
-      "In Wrocław gibt es keine Umweltzone – keine Plakette nötig."
+      "Alkohol: praktisch null (Grenze 0,2 Promille)."
     ],
     sos: "Notruf: 112",
-    sosHint: "Eine Nummer für Polizei, Rettungsdienst und Feuerwehr.",
+    sosHint: "Eine Nummer für Polizei, Rettungsdienst und Feuerwehr – in Polen und in Deutschland.",
     readyLabel: "Wenn Sie bereit sind",
+    tomorrowLabel: "Morgen",
     readyTitle: "Fahren Sie ganz ohne Eile los",
-    readyLine: (p) => p.mode === "direct"
-      ? "Wenn Sie jetzt losfahren: in Wieluń ≈ " + approx(p.H) + "."
-      : "Wenn Sie jetzt losfahren: in Wrocław ≈ " + approx(p.A) + ", in Wieluń ≈ " + approx(p.H) + ".",
-    departBtn: "Wir sind losgefahren – Vadym schreiben",
-    departMsg: "Wir sind in Berlin losgefahren 🚗",
+    readyLine: (p, tomorrow) => (tomorrow ? "Zum Beispiel um " + hm(p.D) + ": " : "Wenn Sie jetzt losfahren: ") +
+      (p.mode === "shop" ? "im Laden ≈ " + approx(p.shopStart) + ", zu Hause ≈ " + approx(p.H) + "." : "zu Hause ≈ " + approx(p.H) + "."),
+    darkAdvice: (sun, latest) => "In Berlin wird es ≈ " + hm(sun) + " dunkel. Um bei Tageslicht anzukommen, bis ≈ " + approx(Math.floor(latest / 5) * 5) + " losfahren.",
+    darkLate: (sun) => "In Berlin wird es ≈ " + hm(sun) + " dunkel, das letzte Stück fahren Sie also im Dunkeln. Kein Problem – ruhig fahren und Pausen machen.",
+    departBtn: "Wir fahren los – Plan starten",
     depLabel: "Abfahrt um",
     nowLabel: "Laut Plan jetzt",
-    arriveWroclaw: (t) => "Ankunft in Wrocław ≈ " + t,
-    leaveParking: (t, left) => left ? "Ausfahrt aus dem Parkhaus ungefähr um " + t + " (in " + left + ")" : "Langsam Zeit, das Parkhaus zu verlassen (ungefähr " + t + ")",
-    arriveWielun: (t) => "Ankunft in Wieluń ≈ " + t,
-    welcome: "Willkommen in Wieluń!",
+    lines: {
+      dep: (p) => p.mode === "shop" ? "Im Laden ≈ " + approx(p.shopStart) : "Pause ≈ " + approx(p.breakAt),
+      shop: (p, left) => "Weiterfahrt vom Laden ≈ " + approx(p.shopEnd) + (left ? " (in " + left + ")" : ""),
+      drive: (p) => "Pause ≈ " + approx(p.breakAt),
+      break: (p) => "Zu Hause ≈ " + approx(p.H),
+      home: () => "Willkommen zu Hause!"
+    },
     show: "Schritt anzeigen",
     nowTag: "jetzt", nextTag: "als Nächstes",
     hShort: "Std.", mShort: "Min.",
     wi: 2,
-    city: { berlin: "Berlin", wroclaw: "Wrocław", wielun: "Wieluń" },
-    rain: (p) => p < 20 ? "Regen sehr unwahrscheinlich" : p < 50 ? "Regen möglich, ein Schirm schadet nicht" : "Regen wahrscheinlich, Schirm mitnehmen",
-    sunset: (t) => "Sonnenuntergang um " + t,
+    city: { wielun: "Wieluń", legnica: "Legnica", berlin: "Berlin" },
+    rain: (p) => p < 20 ? "Regen sehr unwahrscheinlich" : p < 50 ? "Regen möglich" : "Regen wahrscheinlich – auf der Autobahn mehr Abstand halten",
+    sunset: (t) => "dunkel ≈ " + t,
     credit: (d, t) => 'Wetter: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>, aktualisiert am ' + d + ". um " + t
   }
 };
 
-function fmtDur(m, lang){
-  const d = T[lang || LANG], h = Math.floor(m / 60), r = m % 60;
+function fmtDur(m){
+  const d = T[LANG], h = Math.floor(m / 60), r = m % 60;
   if (h && r) return h + " " + d.hShort + " " + r + " " + d.mShort;
   if (h) return h + " " + d.hShort;
   return r + " " + d.mShort;
@@ -666,34 +571,42 @@ let BIG = load("trip-size") === "lg";
 let WX = null;
 let STEPS = [];
 let PLAN = null;
+let PLAN_DATE = null;
 let DEPARTED = false;
+let TOMORROW = false;
 let LAST_KEY = "";
-let PREP_SET = false;
 
 function nowInfo(){
-  const n = new Date();
-  let date = n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate());
-  let mins = n.getHours() * 60 + n.getMinutes();
-  const q = new URLSearchParams(location.search).get("test");     // preview: ?test=09:10
-  if (q && /^\d{1,2}:\d{2}$/.test(q)) { const a = q.split(":").map(Number); date = TRIP_DATE; mins = a[0] * 60 + a[1]; }
-  return { date: date, mins: mins };
+  const qs = new URLSearchParams(location.search);
+  let dt = new Date();
+  const qd = qs.get("date");                                     // preview: ?date=2026-10-25
+  if (qd && /^\d{4}-\d{2}-\d{2}$/.test(qd)) { const a = qd.split("-").map(Number); dt = new Date(a[0], a[1] - 1, a[2], dt.getHours(), dt.getMinutes()); }
+  let mins = dt.getHours() * 60 + dt.getMinutes();
+  const qt = qs.get("test");                                     // preview: ?test=09:10
+  if (qt && /^\d{1,2}:\d{2}$/.test(qt)) { const a = qt.split(":").map(Number); mins = a[0] * 60 + a[1]; }
+  return { dt: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()), mins: mins };
 }
-function getDeparture(){
-  const q = new URLSearchParams(location.search).get("dep");      // preview: ?dep=09:20
+function getDeparture(day){
+  const q = new URLSearchParams(location.search).get("dep");     // preview: ?dep=10:00
   if (q && /^\d{1,2}:\d{2}$/.test(q)) { const a = q.split(":").map(Number); return a[0] * 60 + a[1]; }
-  try { const v = JSON.parse(load("trip-dep") || "null"); if (v && v.date === TRIP_DATE && typeof v.m === "number") return v.m; } catch (e) {}
+  try { const v = JSON.parse(load("trip-ret-dep") || "null"); if (v && v.date === day && typeof v.m === "number") return v.m; } catch (e) {}
   return null;
 }
-function setDeparture(m){ store("trip-dep", JSON.stringify({ date: TRIP_DATE, m: m })); }
+function setDeparture(day, m){ store("trip-ret-dep", JSON.stringify({ date: day, m: m })); }
 
 function computePlan(){
   const info = nowInfo();
-  const isTrip = info.date === TRIP_DATE;
-  const dep = isTrip ? getDeparture() : null;
+  const today = ymd(info.dt);
+  const dep = getDeparture(today);
   DEPARTED = dep != null;
-  const D = DEPARTED ? dep : (isTrip ? Math.ceil(info.mins / 5) * 5 : DEFAULT_DEP);
-  PLAN = makePlan(D);
-  return LANG + "|" + DEPARTED + "|" + D;
+  TOMORROW = !DEPARTED && info.mins >= 17 * 60;
+  let day = info.dt, D;
+  if (DEPARTED) D = dep;
+  else if (TOMORROW) { day = new Date(info.dt.getFullYear(), info.dt.getMonth(), info.dt.getDate() + 1); D = SUGGESTED_DEP; }
+  else D = Math.ceil(info.mins / 5) * 5;
+  PLAN_DATE = day;
+  PLAN = makePlan(D, day);
+  return [LANG, DEPARTED, TOMORROW, ymd(day), D].join("|");
 }
 
 /* ---------- page ---------- */
@@ -707,36 +620,29 @@ function liveHtml(d){
 function render(){
   const d = T[LANG];
   const liveOpen = !!document.querySelector("details.live[open]");
+  const prevWxDay = PLAN_DATE ? ymd(PLAN_DATE) : null;
   LAST_KEY = computePlan();
-  STEPS = d.steps(PLAN, DEPARTED);
+  STEPS = d.steps(PLAN, DEPARTED, TOMORROW);
 
   document.documentElement.lang = LANG;
   document.title = d.pageTitle;
   $("title").textContent = d.title;
-  $("date").textContent = d.date;
+  let dateText = "";
+  try { dateText = new Intl.DateTimeFormat(d.locale, { weekday: "long", day: "numeric", month: "long" }).format(PLAN_DATE); } catch (e) {}
+  $("date").textContent = dateText ? dateText.charAt(0).toUpperCase() + dateText.slice(1) : "";
   $("howto").innerHTML = d.howto;
   $("topCall").innerHTML = btnHtml([CALL_SON, d.callSon, "call-son", ICON_PHONE]);
-
-  $("prepTitle").textContent = d.prepTitle;
-  $("prep").innerHTML = d.prep.map((p) =>
-    '<li>' + p.t +
-    (p.sub ? '<span class="sub">' + p.sub + '</span>' : '') +
-    (p.b ? '<div class="btns">' + p.b.map(btnHtml).join("") + '</div>' : '') +
-    '</li>'
-  ).join("");
 
   $("routeTitle").textContent = d.routeTitle;
   $("late").textContent = d.late;
   $("route").innerHTML = STEPS.map((s, i) => {
-    const tag = s.ordered ? "ol" : "ul";
     const bs = (s.buttons || []).slice();
     if (s.msg) bs.push([waText(s.msg[1]), s.msg[0], "msg", ICON_CHAT]);
     return '<li class="stop" data-k="' + s.k + '">' +
       '<span class="marker" aria-hidden="true">' + (i + 1) + '</span>' +
       '<p class="time">' + s.time + '</p>' +
       '<h3>' + s.title + '</h3>' +
-      '<' + tag + '>' + s.items.map((x) => '<li>' + x + '</li>').join("") + '</' + tag + '>' +
-      (s.note ? '<p class="note">' + s.note + '</p>' : '') +
+      '<ul>' + s.items.map((x) => '<li>' + x + '</li>').join("") + '</ul>' +
       (s.wx ? '<p class="wx" data-i="' + i + '"></p>' : '') +
       (bs.length ? '<div class="btns">' + bs.map(btnHtml).join("") + '</div>' : '') +
       (s.live ? liveHtml(d) : '') +
@@ -757,9 +663,9 @@ function render(){
   fillWeather();
   updateNow();
   store("trip-lang", LANG);
+  if (prevWxDay && prevWxDay !== ymd(PLAN_DATE)) loadWeather();
 }
 
-/* ---------- A+ ---------- */
 function applySize(){
   const d = T[LANG], b = $("sizeBtn");
   if (BIG) document.documentElement.setAttribute("data-size", "lg");
@@ -776,30 +682,29 @@ function updateNow(){
   stops.forEach((s) => s.classList.remove("is-now"));
   document.querySelectorAll(".now-tag").forEach((t) => t.remove());
   const info = nowInfo(), mins = info.mins;
-  const isTrip = info.date === TRIP_DATE;
-
-  // Preparation list: open before the trip day, folded away on the day itself (set once, so a tap to open it sticks).
-  if (!PREP_SET) { $("prepBox").open = !isTrip; PREP_SET = true; }
-
-  if (!isTrip || !PLAN || mins >= PLAN.H + 60) { box.hidden = true; return; }
+  if (DEPARTED && mins >= PLAN.H + 90) { box.hidden = true; return; }
 
   let idx = 0, label, title, line, tagText;
+  const dark = $("darkLine");
   if (!DEPARTED) {
-    label = d.readyLabel; title = d.readyTitle; line = d.readyLine(PLAN); tagText = d.nextTag;
-    $("nowBtn").innerHTML = btnHtml([waText(d.departMsg), d.departBtn, "call-son", ICON_CAR, "departBtn"]);
-    $("departBtn").addEventListener("click", () => {
-      setDeparture(nowInfo().mins);
-      setTimeout(render, 400);   // let WhatsApp open first, then recalculate the plan
-    });
+    label = TOMORROW ? d.tomorrowLabel : d.readyLabel;
+    title = d.readyTitle;
+    line = d.readyLine(PLAN, TOMORROW);
+    tagText = d.nextTag;
+    const latest = latestDaylightDeparture(PLAN_DATE);
+    const stillPossible = latest != null && (TOMORROW || latest >= PLAN.D);
+    dark.textContent = stillPossible ? d.darkAdvice(PLAN.sunset, latest) : d.darkLate(PLAN.sunset);
+    dark.hidden = false;
+    $("nowBtn").innerHTML = TOMORROW ? "" :
+      '<button type="button" class="btn call-son" id="departBtn">' + ICON_CAR + '<span>' + d.departBtn + '</span></button>';
+    if (!TOMORROW) $("departBtn").addEventListener("click", () => { setDeparture(ymd(nowInfo().dt), nowInfo().mins); render(); });
     $("depLine").hidden = true;
   } else {
     for (let i = 0; i < STEPS.length; i++) if (STEPS[i].s <= mins) idx = i;
     const k = STEPS[idx].k;
     label = d.nowLabel; title = (idx + 1) + ". " + STEPS[idx].title; tagText = d.nowTag;
-    if (k === "dep") line = PLAN.mode === "direct" ? d.arriveWielun(approx(PLAN.H)) : d.arriveWroclaw(approx(PLAN.A));
-    else if (k === "drive2") line = d.arriveWielun(approx(PLAN.H));
-    else if (k === "hotel") line = d.welcome;
-    else line = d.leaveParking(approx(PLAN.L), PLAN.L - mins > 0 ? fmtDur(PLAN.L - mins) : "");
+    line = k === "shop" ? d.lines.shop(PLAN, PLAN.shopEnd - mins > 0 ? fmtDur(PLAN.shopEnd - mins) : "") : d.lines[k](PLAN);
+    dark.hidden = true;
     $("nowBtn").innerHTML = '<button type="button" class="btn alt" id="nowGo">' + ICON_DOWN + '<span>' + d.show + '</span></button>';
     $("nowGo").onclick = () => {
       const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -811,7 +716,7 @@ function updateNow(){
     dl.hidden = false;
     $("depInput").addEventListener("change", (e) => {
       const v = e.target.value;
-      if (/^\d{1,2}:\d{2}$/.test(v)) { const a = v.split(":").map(Number); setDeparture(a[0] * 60 + a[1]); render(); }
+      if (/^\d{1,2}:\d{2}$/.test(v)) { const a = v.split(":").map(Number); setDeparture(ymd(nowInfo().dt), a[0] * 60 + a[1]); render(); }
     });
   }
   const stop = stops[idx];
@@ -827,15 +732,17 @@ function updateNow(){
 }
 
 function tick(){
-  const key = (function () { const p = PLAN, dep = DEPARTED; const k = computePlan(); PLAN = p; DEPARTED = dep; return k; })();
+  const keep = [PLAN, PLAN_DATE, DEPARTED, TOMORROW];
+  const key = computePlan();
+  [PLAN, PLAN_DATE, DEPARTED, TOMORROW] = keep;
   if (key !== LAST_KEY) render(); else updateNow();
 }
 
 /* ---------- live weather (Open-Meteo) ---------- */
 const PLACES = {
-  berlin:  { lat: 52.52,   lon: 13.405 },
-  wroclaw: { lat: 51.1096, lon: 17.0318 },
-  wielun:  { lat: 51.2204, lon: 18.5721 }
+  wielun:  { lat: 51.2204, lon: 18.5721 },
+  legnica: { lat: 51.2070, lon: 16.1553 },
+  berlin:  { lat: HOME.lat, lon: HOME.lon }
 };
 function wmo(c){
   if (c === 0) return ["☀️", "ясно", "klar"];
@@ -850,23 +757,16 @@ function wmo(c){
 }
 function temp(t){ const r = Math.round(t); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r) + " °C"; }
 function wxLine(spec, d){
-  const place = WX && WX[spec.place];
-  if (!place || !place.h) return "";
-  const h1 = Math.min(Math.max(Math.floor(spec.from / 60), 0), 23);
-  const h2 = Math.min(Math.max(Math.floor(spec.to / 60), h1), 23);
-  const hours = [];
-  for (let h = h1; h <= h2; h++) if (place.h[h]) hours.push(place.h[h]);
-  if (!hours.length) return "";
-  const t = hours.reduce((a, x) => a + x.t, 0) / hours.length;
-  const w = wmo(hours[0].c);
-  const desc = [w[0], w[d.wi]].filter(Boolean).join(" ");
-  const span = h1 === h2 ? pad(h1) + ":00" : pad(h1) + ":00–" + pad(h2 + 1) + ":00";
-  let s = d.city[spec.place] + ", " + span + ": " + [desc, temp(t)].filter(Boolean).join(", ");
-  if (spec.place === "wroclaw") {
-    const p = Math.max.apply(null, hours.map((x) => x.p == null ? -1 : x.p));
-    if (p >= 0) s += " · " + d.rain(p);
+  let s = "";
+  const place = WX && WX.day === ymd(PLAN_DATE) && WX[spec.place];
+  const h = Math.min(Math.max(Math.round(spec.at / 60), 0), 23);
+  if (place && place.h && place.h[h]) {
+    const x = place.h[h], w = wmo(x.c);
+    const desc = [w[0], w[d.wi]].filter(Boolean).join(" ");
+    s = d.city[spec.place] + ", ≈ " + pad(h) + ":00: " + [desc, temp(x.t)].filter(Boolean).join(", ");
+    if (x.p != null) s += " · " + d.rain(x.p);
   }
-  if (spec.sunset && place.sunset) s += " · " + d.sunset(place.sunset);
+  if (spec.sunset) s = s ? s + " · " + d.sunset(hm(PLAN.sunset)) : d.city.berlin + ": " + d.sunset(hm(PLAN.sunset));
   return s;
 }
 function fillWeather(){
@@ -875,7 +775,7 @@ function fillWeather(){
     const step = STEPS[Number(el.dataset.i)];
     el.textContent = step && step.wx ? wxLine(step.wx, d) : "";
   });
-  const has = WX && WX.ts && (WX.berlin || WX.wroclaw || WX.wielun);
+  const has = WX && WX.ts && WX.day === ymd(PLAN_DATE);
   if (has) {
     const t = new Date(WX.ts);
     $("credits").innerHTML = d.credit(pad(t.getDate()) + "." + pad(t.getMonth() + 1), pad(t.getHours()) + ":" + pad(t.getMinutes()));
@@ -891,33 +791,34 @@ function getJson(url, ms){
     .catch((e) => { clearTimeout(timer); throw e; });
 }
 function loadWeather(){
+  const day = ymd(PLAN_DATE);
   const keys = Object.keys(PLACES);
   return Promise.all(keys.map((k) => {
     const p = PLACES[k];
     const url = "https://api.open-meteo.com/v1/forecast?latitude=" + p.lat + "&longitude=" + p.lon +
-      "&hourly=temperature_2m,precipitation_probability,weather_code&daily=sunset" +
-      "&timezone=Europe%2FWarsaw&start_date=" + TRIP_DATE + "&end_date=" + TRIP_DATE;
+      "&hourly=temperature_2m,precipitation_probability,weather_code" +
+      "&timezone=Europe%2FBerlin&start_date=" + day + "&end_date=" + day;
     return getJson(url, 8000).then((j) => ({ k: k, j: j }), () => null);
   })).then((results) => {
-    const next = Object.assign({}, WX || {});
+    const next = (WX && WX.day === day) ? Object.assign({}, WX) : { day: day };
     let got = false;
     results.forEach((res) => {
       if (!res || !res.j || !res.j.hourly || !res.j.hourly.time) return;
       const H = res.j.hourly, out = { h: {} };
       H.time.forEach((tm, i) => {
-        if (String(tm).slice(0, 10) !== TRIP_DATE) return;
+        if (String(tm).slice(0, 10) !== day) return;
         const hour = Number(String(tm).slice(11, 13));
         const t = H.temperature_2m ? H.temperature_2m[i] : null;
         if (t == null) return;
         out.h[hour] = { t: t, p: H.precipitation_probability ? H.precipitation_probability[i] : null, c: H.weather_code ? H.weather_code[i] : null };
       });
-      if (res.j.daily && res.j.daily.sunset && res.j.daily.sunset[0]) out.sunset = String(res.j.daily.sunset[0]).slice(11, 16);
       if (Object.keys(out.h).length) { next[res.k] = out; got = true; }
     });
     if (got) {
       next.ts = Date.now();
+      next.day = day;
       WX = next;
-      store("trip-wx3", JSON.stringify(WX));
+      store("trip-ret-wx", JSON.stringify(WX));
       fillWeather();
     }
   });
@@ -928,7 +829,7 @@ let start = (location.hash || "").replace("#", "");
 if (!T[start]) start = load("trip-lang") || "";
 if (!T[start]) start = "uk";
 LANG = start;
-try { const cached = JSON.parse(load("trip-wx3") || "null"); if (cached && cached.ts) WX = cached; } catch (e) {}
+try { const cached = JSON.parse(load("trip-ret-wx") || "null"); if (cached && cached.ts) WX = cached; } catch (e) {}
 
 document.querySelectorAll(".lang-switch button").forEach((b) =>
   b.addEventListener("click", () => { LANG = b.dataset.lang; render(); window.scrollTo(0, 0); })
